@@ -1,7 +1,7 @@
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { MoreVertical, Paperclip, MessageSquare } from "lucide-react";
+import { MoreVertical, Paperclip, MessageSquare, FileText } from "lucide-react";
 
 const TaskCard = ({ task, onClick }) => {
     const {
@@ -25,6 +25,25 @@ const TaskCard = ({ task, onClick }) => {
         opacity: isDragging ? 0.5 : 1,
     };
 
+    const viewAttachment = (e, file) => {
+        e.stopPropagation();
+        try {
+            const base64Data = file.data.includes(",") ? file.data.split(",")[1] : file.data;
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: file.type });
+            const fileURL = URL.createObjectURL(blob);
+            window.open(fileURL, "_blank");
+        } catch (e) {
+            console.error("Error viewing attachment:", e);
+            window.open(file.data, "_blank");
+        }
+    };
+
     return (
         <div
             ref={setNodeRef}
@@ -44,11 +63,18 @@ const TaskCard = ({ task, onClick }) => {
             {task.attachments && task.attachments.length > 0 && (
                 <div className="attachment-preview">
                     {task.attachments.map((file, idx) => (
-                        <div key={idx} className="preview-item">
+                        <div
+                            key={idx}
+                            className="preview-item cursor-pointer hover-scale"
+                            title={`View ${file.name}`}
+                            onClick={(e) => viewAttachment(e, file)}
+                        >
                             {file.type.startsWith("image/") ? (
-                                <img src={file.data} alt={file.name} title={file.name} />
+                                <img src={file.data} alt={file.name} />
                             ) : (
-                                <div className="file-icon" title={file.name}>PDF</div>
+                                <div className="file-icon">
+                                    <FileText size={16} style={{ color: 'var(--accent-primary)' }} />
+                                </div>
                             )}
                         </div>
                     ))}

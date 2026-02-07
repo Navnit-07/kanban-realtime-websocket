@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Upload, Trash2 } from "lucide-react";
+import { X, Upload, Trash2, Eye, FileText } from "lucide-react";
 
 const TaskModal = ({ isOpen, onClose, onSave, onDelete, task }) => {
     const [title, setTitle] = useState("");
@@ -67,6 +67,24 @@ const TaskModal = ({ isOpen, onClose, onSave, onDelete, task }) => {
 
     const removeAttachment = (index) => {
         setAttachments((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const viewAttachment = (file) => {
+        try {
+            const base64Data = file.data.includes(",") ? file.data.split(",")[1] : file.data;
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: file.type });
+            const fileURL = URL.createObjectURL(blob);
+            window.open(fileURL, "_blank");
+        } catch (e) {
+            console.error("Error viewing attachment:", e);
+            window.open(file.data, "_blank");
+        }
     };
 
     const handleSubmit = (e) => {
@@ -171,20 +189,35 @@ const TaskModal = ({ isOpen, onClose, onSave, onDelete, task }) => {
                         </div>
                         <div className="attachment-preview mt-2">
                             {attachments.map((file, idx) => (
-                                <div key={idx} className="preview-item group">
+                                <div key={idx} className="preview-item group relative">
                                     {file.type.startsWith("image/") ? (
                                         <img src={file.data} alt={file.name} />
                                     ) : (
-                                        <div className="file-icon">PDF</div>
+                                        <div className="file-icon flex flex-col items-center gap-1">
+                                            <FileText size={20} style={{ color: 'var(--accent-primary)' }} />
+                                            <span style={{ fontSize: '0.6rem' }}>PDF</span>
+                                        </div>
                                     )}
-                                    <button
-                                        type="button"
-                                        onClick={() => removeAttachment(idx)}
-                                        className="absolute top-1 right-1 bg-danger text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        style={{ position: 'absolute', top: 2, right: 2, padding: 2, borderRadius: '50%', backgroundColor: 'red', border: 'none', color: 'white', cursor: 'pointer' }}
-                                    >
-                                        <Trash2 size={12} />
-                                    </button>
+                                    <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: 'rgba(0,0,0,0.6)', position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => viewAttachment(file)}
+                                            className="p-1 text-white rounded hover:bg-white hover:bg-opacity-20 transition-colors"
+                                            style={{ background: 'var(--accent-primary)', border: 'none', padding: '4px', borderRadius: '4px', cursor: 'pointer', color: 'white' }}
+                                            title="View"
+                                        >
+                                            <Eye size={16} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeAttachment(idx)}
+                                            className="p-1 text-white rounded hover:bg-white hover:bg-opacity-20 transition-colors"
+                                            style={{ background: 'var(--danger)', border: 'none', padding: '4px', borderRadius: '4px', cursor: 'pointer', color: 'white' }}
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
