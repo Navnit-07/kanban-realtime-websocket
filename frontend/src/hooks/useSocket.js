@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { io } from "socket.io-client";
 
-const SOCKET_SERVER_URL = "http://localhost:5000";
+const SOCKET_SERVER_URL = "https://kanban-realtime-websocket.onrender.com";
 
 export const useSocket = () => {
     const socketRef = useRef(null);
